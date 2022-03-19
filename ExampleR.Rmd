@@ -1,0 +1,240 @@
+**Readme** This is a segment from a homework assignment I completed for my Statistical Programming Methods course. There is no overall theme to this file, but the questions give context to my code. This is to simply serve as an example of my experience in R until I can upload a more streamlined project.
+
+```{r}
+library(dplyr)
+```
+
+**#4** (Introduction to R Chapter 5, Introduction to R Chapter 8) Create a matrix (named as `matrix01`) with three columns such that column 1 contains the first 10 letters of the alphabet in repeating sequence (i.e. a, a, b, b, ..., j, j) letters, column 2 contains 20 random continuous normal distribution deviates (where N(0,3)) rounded to the tenths place, and column 3 contains a randomized ordering of the concatenated values of columns 1 and 2. *The concatenation should not have any spaces between the values of columns 1 and 2.* Print the resulting `matrix01`. *There should be only 20 rows in `matrix01`.* 
+
+  
+```{r}
+v1 = c('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j')
+v2 = rep(v1, each = 2)
+v3 = round(rnorm(20, mean = 0, sd = 3), 1)
+v4 = paste(v2[sample(20, 20)], v3[sample(20, 20)], sep = "")
+matrix01 = cbind(v2, v3, v4)
+matrix01
+
+
+```
+
+
+**#5** (Introduction to R Chapter 2, Introduction to R Chapter 9, Introduction to R Chapter 10) Create one custom function that converts measurements to units of temperature including: Fahrenheit, Kelvin, and Celsius. In particular, your function should be able to take three inputs: the number, original temperature unit, converted temperature unit. Your function should return one output as a single phrase containing the converted value. **For example, if the three inputs are 2, "Fahrenheit", "Kelvin" then your function returns the character string "2 degrees Fahrenheit equals X Kelvin". Kelvin is not in degrees, but Fahrenheit and Celsius are in degrees.** Convert the following:
+
+i. 46 Fahrenheit to Kelvin
+
+ii. 48 Celsius to Fahrenheit
+
+```{r}
+converter = function(num, orig, new) {
+  if (new == "Fahrenheit") {
+    if (orig == "Celsius") {
+      num1 = (num * (9/5)) + 32
+      ret = paste(num, "degrees", orig, "is", num1, "degrees", new, sep = " ")
+      ret
+    } 
+    else {
+      num1 = ((num - 273.15) * (9/5)) + 32
+      ret = paste(num, orig, "is", num1, "degrees", new, sep = " ")
+      ret
+    }
+  } 
+  else if (new == "Celsius") {
+    if (orig == "Fahrenheit") {
+      num1 = (num - 32) * (5/9)
+      ret = paste(num, "degrees", orig, "is", num1, "degrees", new, sep = " ")
+      ret
+    } 
+    else {
+      num1 = num - 273.15
+      ret = paste(num, orig, "is", num1, "degrees", new, sep = " ")
+      ret
+    }
+  } 
+  else {
+    if (orig == "Fahrenheit") {
+      num1 = ((num - 32) * (5/9)) + 273.15
+      ret = paste(num, "degrees", orig, "is", num1, new, sep = " ")
+      ret
+    } 
+    else {
+      num1 = num + 273.15
+      ret = paste(num, "degrees", orig, "is", num1, new, sep = " ")
+      ret
+    }
+  }
+}
+print(converter(46, "Fahrenheit", "Kelvin"))
+print(converter(48, "Celsius", "Fahrenheit"))
+
+```
+
+
+**#6** (Introduction to the tidyverse, Importing data, Introduction to R Chapter 3) Import the Champaign County Sheriff Office & Jail Dataset and its data URL (either [Box](https://uofi.box.com/shared/static/b2rf2r9st2xojtsdcktn698cbkyrgfp3.dat) or [GitHub](https://github-dev.cs.illinois.edu/stat385-s2-sp21/stat385-sp21-course-content/raw/master/data/ccso-jail-data-sp21.dat)) and print its structure. Read the data descriptions to help verify the import was successful.
+
+  - The dataset (a .dat file) contains over 11083 observations and 38 columns for individuals who were booked into jail in Champaign County. The individuals are not identifiable based on personal identity, but they are given unique jacket numbers. Some rows in the data appear more than once because of multiple crimes being assigned to one person. But there is also the possibility of there being recidivists. A recidivist is a person who goes to jail repeatedly (more than one datetime). The demographics of the people, reasons for being booked, and crime code are also given in the data. The original source is the Champaign County Sheriff Office & Jail (CCSO).
+
+```{r}
+library(tidyverse)
+jail = readr::read_csv("https://uofi.box.com/shared/static/b2rf2r9st2xojtsdcktn698cbkyrgfp3.dat")
+```
+
+
+**#7** (Tibbles, Introduction to tidyverse, Wrangling data) Using the tidyverse, Champaign County Sheriff Office & Jail imported in **Problem 6**, and the data description, create a new tibble named `cash_bonds` that contains a wrangled version of the jail data that does the following in this order:  
+
+- i. filters the races or ethnicities to include Black, White, and a new third category called "Other" containing any races or ethnicities that are not black or white but excludes "Unknown" race values
+
+- ii. filters release reason description as "Cash Bond Posted"
+
+- iii. replaces any column names containing the character string "booking" with the character string "booked" 
+
+- iv. arranges to sort in descending order of age at arrest
+
+- v. selects the columns: jacket number, age at arrest, race, city, crime, and release reason description
+
+Now, print the first 10 observations of `cash_bonds` data.
+```{r}
+#i
+cash_bonds = filter(jail, race != "NA")
+cash_bonds = cash_bonds %>% mutate(race = replace(race, race != "White" & race != "Black", "Other"))
+
+#ii
+cash_bonds = filter(cash_bonds, cash_bonds[[37]] == "Cash Bond Posted")
+
+#iii
+cash_bonds = rename(cash_bonds, booked_number = booking_number)
+cash_bonds = rename(cash_bonds, booked_date = booking_date)
+cash_bonds = rename(cash_bonds, booked_time = booking_time)
+cash_bonds = rename(cash_bonds, booked_reason = booking_reason)
+
+#iv
+cash_bonds = arrange(cash_bonds, desc(cash_bonds[[9]]))
+
+#v
+cash_bonds = select(cash_bonds, jacket_number, 'age arrest', race, city, crime, 'release reason description')
+
+print(head(cash_bonds, 10))
+
+```
+
+
+**#8** (Introduction to tidyverse, Wrangling data) Using the tidyverse, Champaign County Sheriff Office & Jail imported in **Problem 6**, and the data description, answer the following question in Markdown syntax and complete sentence(s): 
+
+- Which of these groups spends the most median time in jail in hours:  
+  - black women aged (at arrest) 25 and above,  
+  - black women aged (at arrest) 24 and below,  
+  - black men aged (at arrest) 25 and above,  
+  - black men aged (at arrest) 24 and below,  
+  - white women aged (at arrest) 25 and above,  
+  - white women aged (at arrest) 24 and below,  
+  - white men aged (at arrest) 25 and above, or  
+  - white men aged (at arrest) 24 and below?
+
+```{r}
+#blwomo - black women aged 25+
+blwomo = select(jail, sex, 'age arrest', hours, race)
+
+#blwomy - black women aged <25
+blwomy = filter(blwomo, sex == 'Female' & blwomo[[2]] < 25 & race == 'Black')
+print('Median hours spent in jail for all categories:')
+print('Black women < 25')
+median(blwomy[[3]])
+blwomo = filter(blwomo, sex == 'Female' & blwomo[[2]] > 24 & race == 'Black')
+print('Black women > 24')
+median(blwomo[[3]])
+
+#blmeno - black men aged 25+
+blmeno = select(jail, sex, 'age arrest', hours, race)
+
+#blmeny - black men aged <25
+blmeny = filter(blmeno, sex == 'Male' & blmeno[[2]] < 25 & race == 'Black')
+print('Black men < 25')
+median(blmeny[[3]])
+blmeno = filter(blmeno, sex == 'Male' & blmeno[[2]] > 24 & race == 'Black')
+print('Black men > 24')
+median(blmeno[[3]])
+
+#whwomo - white women aged 25+
+whwomo = select(jail, sex, 'age arrest', hours, race)
+
+#whwomy - white women aged <25
+whwomy = filter(whwomo, sex == 'Female' & whwomo[[2]] < 25 & race == 'White')
+print('White women < 25')
+median(whwomy[[3]])
+whwomo = filter(whwomo, sex == 'Female' & whwomo[[2]] > 24 & race == 'White')
+print('White women > 24')
+median(whwomo[[3]])
+
+#whmeno - white men aged 25+
+whmeno = select(jail, sex, 'age arrest', hours, race)
+
+#whmeny - white men aged <25
+whmeny = filter(whmeno, sex == 'Male' & whmeno[[2]] < 25 & race == 'White')
+print('White men < 25')
+median(whmeny[[3]])
+whmeno = filter(whmeno, sex == 'Male' & whmeno[[2]] > 24 & race == 'White')
+print('White men > 24')
+median(whmeno[[3]])
+```
+The demographic that spends the most median hours in jail is Black Men 25 years of age or older at 38 hours.
+
+
+- Which of these groups spends the least median time in jail in hours:  
+  - black women aged (at arrest) 25 and above,  
+  - black women aged (at arrest) 24 and below,  
+  - black men aged (at arrest) 25 and above,  
+  - black men aged (at arrest) 24 and below,  
+  - white women aged (at arrest) 25 and above,  
+  - white women aged (at arrest) 24 and below,  
+  - white men aged (at arrest) 25 and above, or  
+  - white men aged (at arrest) 24 and below?
+
+The demographic that spends the least time in jail is White Women 24 years of age or younger at 14.5 hours. 
+
+
+**#9** Create a custom user-defined binary operator which computes the 4 statistics (see formulas below) of any pair of vectors, such that the $L$ means the vector on the left-hand-side of the binary operator and the $R$ means the vector on the right-hand-side of the binary operator. The output is a data.frame containing the 4 statistics and their names in quotes as the matrix column names. Now, use column 1 of `matrix_a` as $L$ and column 3 of `matrix_b` as $R$.
+
+1. "Pearson" sample correlation $r_{L,R}=\frac{q_{L,R}}{s_L \cdot s_R}$ where
+
+  - $q_{L,R}=\frac{1}{N-1}\sum_{i=1}^{N}(L_i-\bar{L})(R_i-\bar{R})$
+  
+  - $s_L=\sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(L_i-\bar{L})^2}$ 
+  
+  - $s_R=\sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(R_i-\bar{R})^2}$
+  
+  - $\bar{L}=\frac{1}{N}\sum_{i=1}^{N}L_i$
+  
+  - $\bar{R}=\frac{1}{N}\sum_{i=1}^{N}R_i$
+
+
+2. "covariance" $q_{L,R}=\frac{1}{N-1}\sum_{i=1}^{N}(L_i-\bar{L})(R_i-\bar{R})$
+
+3. "concordance" correlation coefficient $r_c=\frac{2 \cdot q_{L,R}}{s^2_L + s^2_R + (\bar{L}-\bar{R})^2}$
+
+4. "absolute_difference" between Pearson and concordance $|r_{L,R}-r_c|$
+
+
+```{r}
+"%stats%" = function(L, R) {
+  Pearson = cov(L, R) / (sd(L) * sd(R))
+  covariance = cov(L, R)
+  concordance = (2 * cov(L, R)) / (((sd(L))^2 * (sd(R))^2) + (mean(L) - mean(R))^2)
+  absolute_difference = abs(Pearson - concordance)
+  output = data.frame(Pearson=Pearson, covariance=covariance, concordance=concordance, absolute_difference = absolute_difference)
+  output
+}
+
+v_1 = round(rnorm(20, mean = 1, sd = 3), 1)
+v_2 = round(rnorm(20, mean = 2, sd = 3), 1)
+v_3 = round(rnorm(20, mean = 3, sd = 3), 1)
+matrix_a = cbind(v_1, v_2, v_3)
+
+v_4 = round(rnorm(20, mean = 4, sd = 3), 1)
+v_5 = round(rnorm(20, mean = 5, sd = 3), 1)
+v_6 = round(rnorm(20, mean = 6, sd = 3), 1)
+matrix_b = cbind(v_4, v_5, v_6)
+
+matrix_a[,1] %stats% matrix_b[,3]
+
+
+```
